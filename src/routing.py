@@ -2,13 +2,20 @@ from bottle import route, run, template, request
 from database import baseXDB 
 
 ## Sends document to the db
-@route('/document', method='POST')
-def createDoc():
+@route('/database/<databaseName>/document', method='POST')
+def createDoc(databaseName):
     document = request.body
     dataStore = baseXDB()
+    dataStore.setDatabase(databaseName)
     dataStore.insert(document)
     return document
 
+## Drops the specified database
+@route('/database/<name>', method='DELETE')
+def dropDatabase(name):
+    dataStore = baseXDB()
+    dataStore.dropDatabase(name)
+    
 ## Returns all documents on the db
 @route('/document', method='GET')
 def displayDocs():

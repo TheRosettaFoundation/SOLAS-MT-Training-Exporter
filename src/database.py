@@ -8,6 +8,10 @@ class baseXDB:
         self.port = port
         self.username = username
         self.password = password
+        self.databaseName = 'database'
+        
+    def setDatabase(self, databaseName):
+        self.databaseName = databaseName
     
     def insert(self, data):
         try:
@@ -16,19 +20,24 @@ class baseXDB:
             session = BaseXClient.Session(self.address, self.port, self.username, self.password)
             #create new database
          
-            session.create("database", data.getvalue())
+            session.create(self.databaseName, data.getvalue())
             print session.info()
             
             # run query on database
             #print "\n" + session.execute("xquery doc('database')")
             
-            # drop database
-            session.execute("drop db database")
             
-            # close session
-            session.close()
             
         except IOError as e:
             # print exception
             print e
+
+    def dropDatabase(self, databaseName):
+        #create session
+        session = BaseXClient.Session(self.address, self.port, self.username, self.password)
         
+        # drop database
+        session.execute("drop db "+ databaseName)
+            
+        # close session
+        session.close()
