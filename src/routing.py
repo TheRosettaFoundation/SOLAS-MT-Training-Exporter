@@ -17,9 +17,12 @@ def dropDatabase(name):
     dataStore.dropDatabase(name)
     
 ## Returns all documents on the db
-@route('/document', method='GET')
-def displayDocs():
-    return "displaying all documents on db"
+@route('/database/<databaseName>/document', method='GET')
+def displayDocs(databaseName):
+    dataStore = baseXDB()
+    dataStore.setDatabase(databaseName)
+    dataStore.query()
+    return "\ndisplaying all documents on db"
 
 ## Returns specified document on the db
 @route('/document/:id', method='GET')
