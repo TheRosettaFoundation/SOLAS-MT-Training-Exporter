@@ -15,17 +15,27 @@ def createDoc(databaseName):
 def dropDatabase(name):
     dataStore = baseXDB()
     dataStore.dropDatabase(name)
-    
+ 
+## Returns all databases
+@route('/database', method='GET')
+def showDatabases():
+    dataStore = baseXDB()
+    dataStore.showDatabases()
+   
 ## Returns all documents on the db
 @route('/database/<databaseName>/document', method='GET')
 def displayDocs(databaseName):
     dataStore = baseXDB()
     dataStore.setDatabase(databaseName)
-    dataStore.query()
-    return "\ndisplaying all documents on db"
+    return dataStore.queryElements()
+
+
+
+#/database/<databaseName>/document/:id?query=//group[domain=helth]/transunit[id<20 and id>023]&
+
 
 ## Returns specified document on the db
-@route('/document/:id', method='GET')
+@route('/database/<databaseName>/document/:id', method='GET')
 def get_event(id):
     return "displaying document " + id
 
