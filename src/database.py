@@ -76,6 +76,7 @@ class baseXDB:
         
         ret = session.execute(queryStr)
         
+        session.info()
         session.close()
         
         return ret
