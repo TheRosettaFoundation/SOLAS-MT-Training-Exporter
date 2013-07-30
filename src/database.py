@@ -9,7 +9,7 @@ class baseXDB:
         self.port = port
         self.username = username
         self.password = password
-        self.databaseName = 'database'
+        self.databaseName = ''
         
     def setDatabase(self, databaseName):
         self.databaseName = databaseName
@@ -67,35 +67,12 @@ class baseXDB:
         return ret 
     
     
-    def showDatabases(self):
-        #create session
-        session = BaseXClient.Session(self.address, self.port, self.username, self.password)
-        
-        #session.execute("open {0}".format(self.databaseName))
-        
-        
-        ret = session.execute("list")
-            
-        # close session
-        session.close()    
-        return ret
-    
-    def queryElements(self):
-        #create session
-        session = BaseXClient.Session(self.address, self.port, self.username, self.password)
-        
-        session.execute("open {0}".format(self.databaseName))
-
-        ret = session.execute("xquery /")
-        
-        # close session
-        session.close()
-        
-        return ret 
     
     def queryDB(self, queryStr):
         #create session
         session = BaseXClient.Session(self.address, self.port, self.username, self.password)
+        if self.databaseName != '':
+            session.execute("open {0}".format(self.databaseName))
         
         ret = session.execute(queryStr)
         

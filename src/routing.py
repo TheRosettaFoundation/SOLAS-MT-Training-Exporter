@@ -20,14 +20,16 @@ def dropDatabase(name):
 @route('/database', method='GET')
 def showDatabases():
     dataStore = baseXDB()
-    return dataStore.showDatabases()
+    return dataStore.queryDB("list")
+#     return dataStore.showDatabases()
    
 ## Returns all documents on a specified db
 @route('/database/<databaseName>/document', method='GET')
 def displayDocs(databaseName):
     dataStore = baseXDB()
     dataStore.setDatabase(databaseName)
-    return dataStore.queryElements()
+    return dataStore.queryDB("xquery /")
+    #return dataStore.queryElements()
 
 ## Returns specified document
 @route('/database/<databaseName>/document/<idStr>', method='GET')
