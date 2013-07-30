@@ -20,36 +20,34 @@ class baseXDB:
             #create session
             session = BaseXClient.Session(self.address, self.port, self.username, self.password)
             
-            #create new database
-            #session.create(self.databaseName, data.getvalue())
-            #session.create(self.databaseName, data.getvalue())
-            
-            # try to just insert new value into specified db
-            
+            dbStr = dbStr= session.execute("xquery math:uuid()")
+            # try to just insert new value into specified db     
             try:
-                #session.execute("")
                 session.execute("open {0}".format(self.databaseName))
-                dbStr= random_string(8)
+                
                 session.add(dbStr, data.getvalue())
                 #pathStr = self.databaseName+".xml"
                 #session.add(pathStr, data.getvalue())
                 print session.info()
                 
             except IOError as e:
-            # if that fails we can assume that the db doesn't exist, so create it and insert value
-                session.create(self.databaseName, data.getvalue())
+                # if that fails we can assume that the db doesn't exist, so create it and insert value
+                session.execute("create db {0}".format(self.databaseName))
+                session.add(dbStr, data.getvalue())
+                
     
-#             # print exception
+                # print exception
                 print e
             
             print session.info()
             
-            # run query on database
-            #print "\n" + session.execute("xquery doc('database')")
+            
             
             # close session
             session.close()
             
+            # return the key
+            return dbStr
             
         except IOError as e:
             # print exception
@@ -61,28 +59,47 @@ class baseXDB:
         
         # drop database
         session.execute("drop db "+ databaseName)
+        ret = session.info()
             
         # close session
         session.close()
+        
+        return ret 
+    
     
     def showDatabases(self):
         #create session
         session = BaseXClient.Session(self.address, self.port, self.username, self.password)
         
-        # drop database
-        print session.execute("show databases")
+        #session.execute("open {0}".format(self.databaseName))
+        
+        
+        ret = session.execute("list")
             
         # close session
-        session.close()
-        
+        session.close()    
+        return ret
+    
     def queryElements(self):
         #create session
         session = BaseXClient.Session(self.address, self.port, self.username, self.password)
         
         session.execute("open {0}".format(self.databaseName))
 
-        return session.execute("xquery /")
+        ret = session.execute("xquery /")
         
         # close session
         session.close()
+        
+        return ret 
+    
+    def queryDB(self, queryStr):
+        #create session
+        session = BaseXClient.Session(self.address, self.port, self.username, self.password)
+        
+        ret = session.execute(queryStr)
+        
+        session.close()
+        
+        return ret
     

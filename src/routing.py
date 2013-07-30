@@ -7,8 +7,8 @@ def createDoc(databaseName):
     document = request.body
     dataStore = baseXDB()
     dataStore.setDatabase(databaseName)
-    dataStore.insert(document)
-    return document
+    return dataStore.insert(document)
+    #return document
 
 ## Drops the specified database
 @route('/database/<name>', method='DELETE')
@@ -20,16 +20,21 @@ def dropDatabase(name):
 @route('/database', method='GET')
 def showDatabases():
     dataStore = baseXDB()
-    dataStore.showDatabases()
+    return dataStore.showDatabases()
    
-## Returns all documents on the db
+## Returns all documents on a specified db
 @route('/database/<databaseName>/document', method='GET')
 def displayDocs(databaseName):
     dataStore = baseXDB()
     dataStore.setDatabase(databaseName)
     return dataStore.queryElements()
 
-
+## Returns specified document
+@route('/database/<databaseName>/document/<idStr>', method='GET')
+def retrieveElement(databaseName, idStr):
+    dataStore = baseXDB()
+    dataStore.setDatabase(databaseName)
+    return dataStore.queryDB("xquery collection('{0}/{1}')".format(databaseName, idStr))
 
 #/database/<databaseName>/document/:id?query=//group[domain=helth]/transunit[id<20 and id>023]&
 
