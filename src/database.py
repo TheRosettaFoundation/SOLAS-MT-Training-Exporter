@@ -52,7 +52,7 @@ class baseXDB:
             print session.info()
             
             
-            
+            dom = None
             # close session
             session.close()
             
@@ -120,4 +120,6 @@ class baseXDB:
         session.close()
         
         return ret
+
+        
     

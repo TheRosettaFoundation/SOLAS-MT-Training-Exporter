@@ -36,6 +36,20 @@ def retrieveElement(databaseName, idStr):
     dataStore.setDatabase(databaseName)
     return dataStore.queryDB("xquery collection('{0}/{1}')".format(databaseName, idStr))
 
+## Returns transunits which contain specified domains from a specified db 
+@route('/databases/<databaseName>/transunit/<domain>', method='GET')
+def retrieveTransUnitsDB(databaseName, domain):
+    dataStore = baseXDB()
+    dataStore.setDatabase(databaseName)
+    return dataStore.queryDB("xquery //*[local-name()='trans-unit' and @*:domains='{0}']".format(domain))
+
+## Returns transunits which contain specified domains from a specified document
+@route('/databases/<databaseName>/documents/<idStr>/transunit/<domain>', method='GET')
+def retrieveTransUnits(databaseName, idStr, domain):
+    dataStore = baseXDB()
+    dataStore.setDatabase(databaseName)
+    return dataStore.queryDB("xquery collection('{0}/{1}')//*[local-name()='trans-unit' and @*:domains='{2}']".format(databaseName, idStr, domain))
+
 ## Delete a specified document
 @route('/databases/<databaseName>/documents/<idStr>', method='DELETE')
 def updateElement(databaseName, idStr):
