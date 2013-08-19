@@ -76,23 +76,17 @@ class baseXDB:
             if domain != None:
                 varNode.setAttribute('itsxlf:domains', domain)
                 print "parent attribute added"
-                print varNode.attributes.keys()
             else:
                 print "no parent attribute added"
         else:
             # if an attribute already exists on the current node, then set that to the current one
             domain = varNode.getAttribute('itsxlf:domains')
-            print "domain on child node found"
-            print domain 
             
         # get the root element as a node
         nodes = data.childNodes # getElementsByTagName("xliff")[0]
         
         for node in nodes:
             if node.nodeType == node.ELEMENT_NODE:
-                print "++++++++++++++++++++++++++"
-                print varNode
-                print domain
                 self.applyDomainInheritence(inputDom, node, domain)
         
     
