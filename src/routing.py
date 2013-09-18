@@ -130,9 +130,10 @@ def retrieveDomains(dbName):
                                         <db id = '%(dbname)s'>
                                             <domains>
                                             {
-                                                for $domain in collection()//*[@*:domains]
+                                                let $list := //@*:domains
+                                                for $domain in distinct-values($list)
                                                     return 
-                                                        <domain id = '{data($domain/@*:domains)}'/>
+                                                        <domain id = '{$domain}'/>
                                             }
                                             </domains>
                                         </db>
@@ -182,31 +183,6 @@ def retrieveDocumentsInDomains(dbName, domain):
                                             </docs>
                                         </db>
                                     </dbs>"""  % {"dbname":dbName, "domain":domain})
-    ##return dataStore.queryDB("xquery collection('{0}')/ /@*:'{1}'".format(databaseName, domain))
-    ##return dataStore.queryDB("xquery for $domain in collection('/')//@*:domains   return <domain>{data($domain)}</domain>")
-    ##return dataStore.queryDB("xquery //*[local-name()='trans-unit' and @*:domains='{0}']".format(domain))
-    
-## Returns transunits which contain specified domains
-@route('/dbs/<dbName>/trans-units/<domain>/', method='GET')
-def retrieveTransUnitsDB(dbName, domain):
-    createHeaders ()
-    dataStore = baseXDB()
-    dataStore.setDatabase(dbName)
-    return dataStore.queryDB("""xquery let $x :=1
-                                return <dbs>
-                                        <db id = '%(dbname)s'>
-                                            <docs>
-                                            {
-                                                for $idStr in collection()[.//*[@*:domains='%(domain)s']]/document-uri()                                                
-                                                let $doc := collection( $idStr)
-                                                    return 
-                                                        <doc id = '{substring-after(data($idStr), '/')}'>
-                                                        {$doc}
-                                                        </doc>
-                                            }
-                                            </docs>
-                                        </db>
-                                    </dbs>"""  % {"dbname":dbName, "domain":domain})
 
 ## Returns transunits which contain specified domains from a specified db 
 @route('/dbs/<dbName>/domains/<domain>/trans-units/', method='GET')
@@ -248,16 +224,6 @@ def retrieveTransUnitsDataBase(dbName, domain):
                                     </dbs>"""  % {"dbname":dbName, "domain":domain})
     ##return dataStore.queryDB("xquery //*[local-name()='trans-unit' and @*:domains='{0}']".format(domain))
 
-
-
-## Returns transunits which contain specified domains from a specified document
-@route('/dbs/<dbName>/docs/<idStr>/trans-units/<domain>/', method='GET')
-def retrieveTransUnits(dbName, idStr, domain):
-    createHeaders ()
-    dataStore = baseXDB()
-    dataStore.setDatabase(dbName)
-    return dataStore.queryDB("xquery collection('{0}/{1}')//*[local-name()='trans-unit' and @*:domains='{2}']".format(dbName, idStr, domain))
-
 ## Delete a specified document
 @route('/dbs/<dbName>/docs/<idStr>/', method='DELETE')
 def updateElement(dbName, idStr):
@@ -273,6 +239,21 @@ def dropDatabase(dbName):
     dataStore = baseXDB()
     dataStore.dropDatabase(dbName)
     
+# ## Returns transunits which contain specified domains
+# @route('/dbs/<dbName>/trans-units/<domain>/', method='GET')
+# def retrieveTransUnitsDB(dbName, domain):
+#     createHeaders ()
+#     dataStore = baseXDB()
+#     dataStore.setDatabase(dbName)
+#     return dataStore.queryDB("""xquery let $x :=1 """  % {"dbname":dbName, "domain":domain})
+
+# ## Returns transunits which contain specified domains from a specified document
+# @route('/dbs/<dbName>/docs/<idStr>/trans-units/<domain>/', method='GET')
+# def retrieveTransUnits(dbName, idStr, domain):
+#     createHeaders ()
+#     dataStore = baseXDB()
+#     dataStore.setDatabase(dbName)
+#     return dataStore.queryDB("xquery collection('{0}/{1}')//*[local-name()='trans-unit' and @*:domains='{2}']".format(dbName, idStr, domain))    
     
 # ## Returns all documents on a specified db
 # @route('/dbs/<dbName>/docs', method='GET')
