@@ -1,5 +1,5 @@
 import BaseXClient, time
-from keyring.tests.test_backend import random_string
+##from keyring.tests.test_backend import random_string
 from xml.dom.minidom import parse, parseString
 
 class baseXDB:
@@ -30,7 +30,7 @@ class baseXDB:
             #create session
             session = BaseXClient.Session(self.address, self.port, self.username, self.password)
             
-            dbStr = dbStr= session.execute("xquery math:uuid()")
+            dbStr = dbStr= session.execute("xquery random:uuid()")
             # try to just insert new value into specified db     
             try:
                 session.execute("open {0}".format(self.databaseName))

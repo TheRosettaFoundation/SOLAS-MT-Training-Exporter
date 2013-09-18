@@ -1,61 +1,210 @@
-from bottle import route, run, template, request
+#!/usr/bin/python
+
+from bottle import route, run, template, request, response
 from database import baseXDB 
 
+def createHeaders ():
+  response.set_header('Access-Control-Allow-Origin', '*')
+  response.set_header('Access-Control-Allow-Headers', 'Content-Type')
+  response.set_header('Access-Control-Allow-Methods' ,'GET, POST, PUT, DELETE')
+
+## Returns all databases names
+@route('/dbs/', method='GET')
+def showDatabases():
+    createHeaders ()
+    dataStore = baseXDB()
+    return dataStore.queryDB("list")
+    ##return dataStore.queryDB("list")
+
+## Returns all document id's in a specific database
+@route('/dbs/<dbName>/', method='GET')
+def showDocumentIds(dbName):
+    createHeaders ()
+    dataStore = baseXDB()
+    dataStore.setDatabase(dbName)
+    return dataStore.queryDB("""xquery let $x :=1
+                                return <dbs>
+                                        <db id = '%(dbname)s'>
+                                            <docs>
+                                            {
+                                                for $idStr in collection()/document-uri()
+                                                    return 
+                                                        <doc id = '{substring-after(data($idStr), '/')}'>
+                                                        
+                                                        </doc>
+                                            }
+                                            </docs>
+                                        </db>
+                                    </dbs>""" % {"dbname":dbName})
+
+## Returns all documents in a specific database
+@route('/dbs/<dbName>/documents/', method='GET')
+def showDocumentsInDatabase(dbName):
+    createHeaders ()
+    dataStore = baseXDB()
+    dataStore.setDatabase(dbName)
+    return dataStore.queryDB("""xquery let $x :=1
+                            return <dbs>
+                                    <db id = '%(dbname)s'>
+                                        <docs>
+                                        {
+                                            for $idStr in collection()/document-uri()
+                                            let $doc := collection( $idStr)
+                                            return
+                                            <doc id = '{substring-after(data($idStr), '/')}'>
+                                                {$doc}
+                                            </doc>
+                                        }
+                                        </docs>
+                                    </db>
+                                </dbs>""" % {"dbname":dbName})
+
 ## Sends document to the db
-@route('/databases/<databaseName>/documents', method='POST')
-def createDoc(databaseName):
+@route('/dbs/<dbName>/documents/', method='POST')
+def createDoc(dbName):
+    createHeaders ()
     document = request.body
     dataStore = baseXDB()
-    dataStore.setDatabase(databaseName)
+    dataStore.setDatabase(dbName)
     return dataStore.insert(document)
     #return document
 
-## Drops the specified database
-@route('/databases/<name>', method='DELETE')
-def dropDatabase(name):
-    dataStore = baseXDB()
-    dataStore.dropDatabase(name)
- 
-## Returns all databases
-@route('/databases', method='GET')
-def showDatabases():
-    dataStore = baseXDB()
-    return dataStore.queryDB("list")
-   
-## Returns all documents on a specified db
-@route('/databases/<databaseName>/documents', method='GET')
-def displayDocs(databaseName):
-    dataStore = baseXDB()
-    dataStore.setDatabase(databaseName)
-    return dataStore.queryDB("xquery /")
-
 ## Returns specified document
-@route('/databases/<databaseName>/documents/<idStr>', method='GET')
-def retrieveElement(databaseName, idStr):
+@route('/dbs/<dbName>/documents/<idStr>/', method='GET')
+def retrieveElement(dbName, idStr):
+    createHeaders ()
     dataStore = baseXDB()
-    dataStore.setDatabase(databaseName)
-    return dataStore.queryDB("xquery collection('{0}/{1}')".format(databaseName, idStr))
+    dataStore.setDatabase(dbName)
+    return dataStore.queryDB("""xquery let $x :=1
+                                return 
+                                <dbs>
+                                    <db id = '%(dbname)s'>
+                                        <docs>
+                                        {
+                                            let $doc := collection('%(dbname)s/%(docID)s')
+                                            return
+                                            <doc id = '%(docID)s'>
+                                                {$doc}
+                                            </doc>
+                                        }
+                                        </docs>
+                                    </db>
+                                </dbs>""" % {"dbname":dbName, "docID":idStr})
+
+## Returns all domains in a specified document
+@route('/dbs/<dbName>/documents/<idStr>/domains/', method='GET')
+  
+## Returns all domains in all databases 
+@route('/dbs/<dbName>/domains/', method='GET')
+def retrieveDomains(dbName):
+    createHeaders ()
+    dataStore = baseXDB()
+    dataStore.setDatabase(dbName)
+    return dataStore.queryDB("""xquery let $x :=1
+                                return <dbs>
+                                        <db id = '%(dbname)s'>
+                                            <domains>
+                                            {
+                                                for $domain in collection()//*[@*:domains]
+                                                    return 
+                                                        <domain id = '{data($domain/@*:domains)}'/>
+                                            }
+                                            </domains>
+                                        </db>
+                                    </dbs>""" % {"dbname":dbName})
+    ##return dataStore.queryDB("xquery for $domain at $i in //*[@*:domains]  return <domain>{data($domain/@*:domains)}</domain>")
+    ##return dataStore.queryDB("xquery //*[local-name()='trans-unit' and @*:domains='{0}']".format(domain))
+
+## Returns document id's with a specified domain
+@route('/dbs/<dbName>/domains/<domain>/', method='GET')
+def retrieveDocsByDomain(dbName, domain):
+    createHeaders ()
+    dataStore = baseXDB()
+    dataStore.setDatabase(dbName)
+    return dataStore.queryDB("""xquery let $x :=1
+                                return <dbs>
+                                        <db id = '%(dbname)s'>
+                                            <docs>
+                                            {
+                                                for $idStr in collection()[.//*[@*:domains='%(domain)s']]/document-uri()
+                                                    return 
+                                                        <doc id = '{substring-after(data($idStr), '/')}'>
+                                                        
+                                                        </doc>
+                                            }
+                                            </docs>
+                                        </db>
+                                    </dbs>"""  % {"dbname":dbName, "domain":domain})
+
+## Returns all documents with a specified domain
+@route('/dbs/<dbName>/domains/<domain>/documents/', method='GET')
+def retrieveDocumentsInDomains(dbName, domain):
+    createHeaders ()
+    dataStore = baseXDB()
+    dataStore.setDatabase(dbName)
+    return dataStore.queryDB("""xquery let $x :=1
+                                return <dbs>
+                                        <db id = '%(dbname)s'>
+                                            <docs>
+                                            {
+                                                for $idStr in collection()[.//*[@*:domains='%(domain)s']]/document-uri()                                                
+                                                let $doc := collection( $idStr)
+                                                    return 
+                                                        <doc id = '{substring-after(data($idStr), '/')}'>
+                                                        {$doc}
+                                                        </doc>
+                                            }
+                                            </docs>
+                                        </db>
+                                    </dbs>"""  % {"dbname":dbName, "domain":domain})
+    ##return dataStore.queryDB("xquery collection('{0}')/ /@*:'{1}'".format(databaseName, domain))
+    ##return dataStore.queryDB("xquery for $domain in collection('/')//@*:domains   return <domain>{data($domain)}</domain>")
+    ##return dataStore.queryDB("xquery //*[local-name()='trans-unit' and @*:domains='{0}']".format(domain))
+    
+## Returns transunits which contain specified domains
+@route('/dbs/<dbName>/domains/<domain>/transunit/', method='GET')
 
 ## Returns transunits which contain specified domains from a specified db 
-@route('/databases/<databaseName>/transunit/<domain>', method='GET')
-def retrieveTransUnitsDB(databaseName, domain):
+@route('/dbs/<dbName>/transunit/<domain>/', method='GET')
+def retrieveTransUnitsDB(dbName, domain):
+    createHeaders ()
     dataStore = baseXDB()
-    dataStore.setDatabase(databaseName)
+    dataStore.setDatabase(dbName)
     return dataStore.queryDB("xquery //*[local-name()='trans-unit' and @*:domains='{0}']".format(domain))
 
+
+
 ## Returns transunits which contain specified domains from a specified document
-@route('/databases/<databaseName>/documents/<idStr>/transunit/<domain>', method='GET')
-def retrieveTransUnits(databaseName, idStr, domain):
+@route('/dbs/<dbName>/documents/<idStr>/transunit/<domain>/', method='GET')
+def retrieveTransUnits(dbName, idStr, domain):
+    createHeaders ()
     dataStore = baseXDB()
-    dataStore.setDatabase(databaseName)
-    return dataStore.queryDB("xquery collection('{0}/{1}')//*[local-name()='trans-unit' and @*:domains='{2}']".format(databaseName, idStr, domain))
+    dataStore.setDatabase(dbName)
+    return dataStore.queryDB("xquery collection('{0}/{1}')//*[local-name()='trans-unit' and @*:domains='{2}']".format(dbName, idStr, domain))
 
 ## Delete a specified document
-@route('/databases/<databaseName>/documents/<idStr>', method='DELETE')
-def updateElement(databaseName, idStr):
+@route('/dbs/<dbName>/documents/<idStr>/', method='DELETE')
+def updateElement(dbName, idStr):
+    createHeaders ()
     dataStore = baseXDB()
-    dataStore.setDatabase(databaseName)
+    dataStore.setDatabase(dbName)
     return dataStore.queryDB("delete {0}".format(idStr))
+
+## Drops the specified database
+@route('/dbs/<dbName>/', method='DELETE')
+def dropDatabase(dbName):
+    createHeaders ()
+    dataStore = baseXDB()
+    dataStore.dropDatabase(dbName)
+    
+    
+# ## Returns all documents on a specified db
+# @route('/dbs/<dbName>/documents', method='GET')
+# def displayDocs(dbName):
+#     createHeaders ()
+#     dataStore = baseXDB()
+#     dataStore.setDatabase(dbName)
+#     return dataStore.queryDB("xquery /")
 
 # ## Add a specified document
 # @route('/databases/<databaseName>/documents/<idStr>', method='PUT')
@@ -67,6 +216,6 @@ def updateElement(databaseName, idStr):
 #/database/<databaseName>/document/:id?query=//group[domain=helth]/transunit[id<20 and id>023]&
 
  
-run(host='localhost', port=8080, debug=True)
+run(host='0.0.0.0', port=8080, debug=True)
 
 
