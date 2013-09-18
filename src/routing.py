@@ -47,6 +47,7 @@ def showDocumentIds(dbName):
 @route('/dbs/<dbName>/docs/', method='GET')
 def showDocumentsInDatabase(dbName):
     createHeaders ()
+    response.content_type = "application/x-please-download-me"
     dataStore = baseXDB()
     dataStore.setDatabase(dbName)
     return dataStore.queryDB("""xquery let $x :=1
@@ -166,6 +167,7 @@ def retrieveDocsByDomain(dbName, domain):
 @route('/dbs/<dbName>/domains/<domain>/docs/', method='GET')
 def retrieveDocumentsInDomains(dbName, domain):
     createHeaders ()
+    response.content_type = "application/x-please-download-me";
     dataStore = baseXDB()
     dataStore.setDatabase(dbName)
     return dataStore.queryDB("""xquery let $x :=1
@@ -188,6 +190,7 @@ def retrieveDocumentsInDomains(dbName, domain):
 @route('/dbs/<dbName>/domains/<domain>/trans-units/', method='GET')
 def retrieveTransUnitsDataBase(dbName, domain):
     createHeaders ()
+    response.content_type = "application/x-please-download-me"
     dataStore = baseXDB()
     dataStore.setDatabase(dbName)
     return dataStore.queryDB("""xquery let $x :=1
