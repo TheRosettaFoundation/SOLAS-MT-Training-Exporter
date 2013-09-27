@@ -103,41 +103,56 @@ def retrieveDomainsInDocument(dbName,idStr):
     createHeaders ()
     dataStore = baseXDB()
     dataStore.setDatabase(dbName)
-    return dataStore.queryDB("""xquery let $x :=1
+    return dataStore.queryDB("""xquery let $x :=
+                                                (
+                                                        for $domain in collection('%(dbname)s/%(docID)s')//*[@*:domains]
+                                                            let $value := tokenize(($domain/@*:domains), ',')
+                                                                for $endValue in $value
+                                                                    return
+                                                                        normalize-space($endValue) 
+                                                )
                                 return <dbs>
                                         <db id = '%(dbname)s'>
                                             <docs>
                                                 <doc id='%(docID)s'/>
                                                 <domains>
                                                 {
-                                                    for $domain in collection('%(dbname)s/%(docID)s')//*[@*:domains]
-                                                        return 
-                                                            <domain id = '{data($domain/@*:domains)}'/>
+                                                    for $y in distinct-values($x)
+                                                        return
+                                                            <domain id = '{$y}'/>
                                                 }
                                                 </domains>
                                             </docs>
                                         </db>
                                     </dbs>""" % {"dbname":dbName, "docID":idStr})
   
-## Returns all domains in all databases 
+## Returns all domains in a database
 @route('/dbs/<dbName>/domains/', method='GET')
 def retrieveDomains(dbName):
     createHeaders ()
     dataStore = baseXDB()
     dataStore.setDatabase(dbName)
-    return dataStore.queryDB("""xquery let $x :=1
-                                return <dbs>
-                                        <db id = '%(dbname)s'>
-                                            <domains>
-                                            {
-                                                let $list := //@*:domains
-                                                for $domain in distinct-values($list)
-                                                    return 
-                                                        <domain id = '{$domain}'/>
-                                            }
-                                            </domains>
-                                        </db>
-                                    </dbs>""" % {"dbname":dbName})
+    return dataStore.queryDB("""xquery let $x := 
+                                                (
+                                                    let $list := //@*:domains
+                                                        for $domain in distinct-values($list)
+                                                            let $value := tokenize($domain, ',')
+                                                                for $endValue in $value
+                                                                    return
+                                                                        normalize-space($endValue) 
+                                                )
+                                                return 
+                                                    <dbs>
+                                                        <db id = '%(dbname)s'>
+                                                            <domains>
+                                                            {
+                                                                for $y in distinct-values($x)
+                                                                    return
+                                                                        <domain id = '{$y}'/>
+                                                            }
+                                                            </domains>
+                                                        </db>
+                                                    </dbs>""" % {"dbname":dbName})
     ##return dataStore.queryDB("xquery for $domain at $i in //*[@*:domains]  return <domain>{data($domain/@*:domains)}</domain>")
     ##return dataStore.queryDB("xquery //*[local-name()='trans-unit' and @*:domains='{0}']".format(domain))
 
