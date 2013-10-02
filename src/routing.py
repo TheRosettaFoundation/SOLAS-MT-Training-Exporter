@@ -163,20 +163,38 @@ def retrieveDocsByDomain(dbName, domain):
     createHeaders ()
     dataStore = baseXDB()
     dataStore.setDatabase(dbName)
-    return dataStore.queryDB("""xquery let $x :=1
-                                return <dbs>
-                                        <db id = '%(dbname)s'>
-                                            <docs>
-                                            {
-                                                for $idStr in collection()[.//*[@*:domains='%(domain)s']]/document-uri()
-                                                    return 
-                                                        <doc id = '{substring-after(data($idStr), '/')}'>
-                                                        
-                                                        </doc>
-                                            }
-                                            </docs>
-                                        </db>
-                                    </dbs>"""  % {"dbname":dbName, "domain":domain})
+    return dataStore.queryDB("""xquery
+                                    let $a := '^%(domain)s$'
+                                          return 
+                                            <dbs>
+                                                <db id = '%(dbname)s'>
+                                                    <docs>
+                                                        { 
+                                                        let $ids :=
+                                                        (                                           
+                                                            let $b := data(.//*/@*:domains)
+                                                            for $c in $b
+                                                            let $d := tokenize($c , ',')
+                                                            for $e in $d[matches(normalize-space(.), $a, 'i')]
+                                                            let $docID := 
+                                                              (
+                                                                for $idStr in collection()[.//*[@*:domains= $c ]]/document-uri()
+                                                                let $value := collection($idStr)
+                                                                return
+                                                                data($idStr)
+                                                              )
+                                                            for $id in $docID
+                                                            return $id 
+                                                          )
+                                                          for $distinctIds in distinct-values($ids)
+                                                        return                                              
+                                                          <doc id = '{substring-after(data($distinctIds), '/')}'>
+                                                             
+                                                          </doc>
+                                                        }
+                                                    </docs>
+                                                </db>
+                                            </dbs>"""  % {"dbname":dbName, "domain":domain})
 
 ## Returns all documents with a specified domain
 @route('/dbs/<dbName>/domains/<domain>/docs/', method='GET')
@@ -185,21 +203,39 @@ def retrieveDocumentsInDomains(dbName, domain):
     response.content_type = "application/x-xliff";
     dataStore = baseXDB()
     dataStore.setDatabase(dbName)
-    return dataStore.queryDB("""xquery let $x :=1
-                                return <dbs>
-                                        <db id = '%(dbname)s'>
-                                            <docs>
-                                            {
-                                                for $idStr in collection()[.//*[@*:domains='%(domain)s']]/document-uri()                                                
-                                                let $doc := collection($idStr)
-                                                    return 
-                                                        <doc id = '{substring-after(data($idStr), '/')}'>
-                                                        {$doc}
-                                                        </doc>
-                                            }
-                                            </docs>
-                                        </db>
-                                    </dbs>"""  % {"dbname":dbName, "domain":domain})
+    return dataStore.queryDB("""xquery
+                                    let $a := '^%(domain)s$'
+                                          return 
+                                            <dbs>
+                                                <db id = '%(dbname)s'>
+                                                    <docs>
+                                                        { 
+                                                        let $ids :=
+                                                        (                                           
+                                                            let $b := data(.//*/@*:domains)
+                                                            for $c in $b
+                                                            let $d := tokenize($c , ',')
+                                                            for $e in $d[matches(normalize-space(.), $a, 'i')]
+                                                            let $docID := 
+                                                              (
+                                                                for $idStr in collection()[.//*[@*:domains= $c ]]/document-uri()
+                                                                let $value := collection($idStr)
+                                                                return
+                                                                data($idStr)
+                                                              )
+                                                            for $id in $docID
+                                                            return $id 
+                                                          )
+                                                          for $distinctIds in distinct-values($ids)
+                                                          let $doc := collection( $distinctIds)
+                                                        return                                              
+                                                          <doc id = '{substring-after(data($distinctIds), '/')}'>
+                                                             {$doc}
+                                                          </doc>
+                                                        }
+                                                    </docs>
+                                                </db>
+                                            </dbs>"""  % {"dbname":dbName, "domain":domain})
 
 ## Returns transunits which contain specified domains from a specified db 
 @route('/dbs/<dbName>/domains/<domain>/trans-units/', method='GET')
@@ -208,38 +244,48 @@ def retrieveTransUnitsDataBase(dbName, domain):
     response.content_type = "application/x-xliff"
     dataStore = baseXDB()
     dataStore.setDatabase(dbName)
-    return dataStore.queryDB("""xquery let $x :=1
-                                return <dbs>
-                                        <db id = '%(dbname)s'>
-                                            <docs>
-                                            {
-                                                                                                
-                                                let $list := collection()//*[local-name()='trans-unit' and @*:domains='%(domain)s']
-                                                    return 
-                                                    <doc id = '1' domains="%(domain)s">
-                                                        <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:itsx="http://www.ul.ie/its/x-its" version="1.2" xmlns:its="http://www.w3.org/2005/11/its">
-                                                            <file datatype="plaintext" source-language="en-us" >
-                                                                <header/>
-                                                                <body>
+    return dataStore.queryDB("""xquery 
+                                let $a := '^%(domain)s$'
+                                    return 
+                                        <dbs>
+                                            <db id = '%(dbname)s'>
+                                                <docs>
+                                                    {                                            
+                                                    let $b := data(.//*/@*:domains)
+                                                    for $c in $b
+                                                    let $d := tokenize($c , ',')
+                                                    for $e in $d[matches(normalize-space(.), $a, 'i')]
+                                                    let $docID := 
+                                                      (
+                                                        for $idStr in collection()[.//*[@*:domains= $c ]]/document-uri()
+                                                        let $value := collection($idStr)
+                                                        return
+                                                        substring-after(data($idStr), '/')
+                                                      )        
+                                                        return
+                                                            <doc id = '{$docID }' domains= '{normalize-space($e)}'>
                                                                 {
-                                                                for $trans at $i in $list
-                                                                return 
-                                                                    <trans-unit id='{$i}'>
-                                                                        {$trans/*}
-                                                                    </trans-unit>
-                                                                }
-                                                                </body>
-                                                            </file>
-                                                        </xliff>
-                                                    </doc>
-                                                    
-                                            }
-                                            <domains>
-                                                <domain id='%(domain)s'/>
-                                            </domains>
-                                            </docs>
-                                        </db>
-                                    </dbs>"""  % {"dbname":dbName, "domain":domain})
+                                                                    <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:itsx="http://www.ul.ie/its/x-its" version="1.2" xmlns:its="http://www.w3.org/2005/11/its">
+                                                                        <file datatype="" source-language="" >
+                                                                            <header/>
+                                                                            <body>
+                                                                                {
+                                                                                    let $list := collection()//*[local-name()='trans-unit' and @*:domains= $c]  
+                                                                                    for $trans at $i in $list
+                                                                                    return 
+                                                                                        <trans-unit id='{$i}'>
+                                                                                            {$trans/*}
+                                                                                        </trans-unit>
+                                                                                }
+                                                                            </body>
+                                                                        </file>
+                                                                    </xliff>
+                                                                }    
+                                                            </doc>
+                                                    }
+                                                </docs>
+                                            </db>
+                                        </dbs>"""  % {"dbname":dbName, "domain":domain})
     ##return dataStore.queryDB("xquery //*[local-name()='trans-unit' and @*:domains='{0}']".format(domain))
 
 ## Delete a specified document
